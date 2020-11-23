@@ -1,0 +1,16 @@
+cv-io==0.0.2
+cycler==0.10.0
+data==0.4
+decorator==4.4.2
+funcsigs==1.0.2
+future==0.18.2
+kiwisolver==1.1.0
+matplotlib==3.0.3
+numpy==1.18.5
+Pillow==7.2.0
+pkg-resources==0.0.0
+pyparsing==2.4.7
+python-dateutil==2.8.1
+shutilwhich==1.1.0
+six==1.15.0
+tempdir==0.7.1
