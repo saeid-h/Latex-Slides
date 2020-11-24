@@ -23,10 +23,26 @@ def get_gt_temp(image, args, inverse=True):
     m = np.min(gt_norm)
     M = np.max(gt_norm)
     gt_norm = (gt_norm - m) / (M - m) * 255
-    # gt_norm[gt<1e-3] = 0
+    # gt_norm[gt<1e-3] = 255 / 2
     gt_path = os.path.join('tmp', 'gt_'+image).replace('.dpt', '.png')
     cv_io.save(gt_path, gt_norm.astype(np.uint8))
     return gt_path
+
+def get_gt_mask_temp(image_filename, args):
+    mask_final_path = os.path.join(args.data_path, 'occ_mask_final', image_filename)
+    gt_path_abs = get_gt_path(image_filename, args.dataset)
+
+    gt_depth = cv_io.read(gt_path_abs)[192:192+128,192:192+160]
+    final_soft = cv_io.read(mask_final_path).astype(np.float32) / 255.
+    if len(final_soft.shape) > 2: final_soft = final_soft[...,0]
+    final = np.zeros_like(final_soft)
+    final[final_soft>0.5] = 1.0
+    final[gt_depth<0.1] = 0.5
+
+    gt_mask_path = os.path.join('tmp', 'gt_mask_'+image_filename).replace('.dpt', '.png')
+    cv_io.save(gt_mask_path, (final*255).astype(np.uint8))
+
+    return gt_mask_path
 
 
 def get_dif_map(est_path, gt_path, tol=0.2):
@@ -49,13 +65,20 @@ def get_dif_map(est_path, gt_path, tol=0.2):
     return 'tmp/x.png'
     
 
-def ROI_box(rgb_file, thickness=3):
+def ROI_box(rgb_file, args, thickness=3):
     rgb = cv_io.read(rgb_file)
     th = thickness
-    rgb[192-th:192+th,192-th:192+160+th,:] = [0,255,0]
-    rgb[192+128-th:192+128+th,192-th:192+160+th,:] = [0,255,0]
-    rgb[192-th:192+128+th,192-th:192+th,:] = [0,255,0]
-    rgb[192-th:192+128+th,192+160-th:192+160+th,:] = [0,255,0]
+    x = 192; y = 192
+    # if args.dataset == 'nyu':
+    #     x = 192 + 6
+    #     y = 192 + 6
+    # else:
+    #     x = 192
+    #     y = 192
+    rgb[x-th:x+th,y-th:y+160+th,:] = [0,255,0]
+    rgb[x+128-th:x+128+th,y-th:y+160+th,:] = [0,255,0]
+    rgb[x-th:x+128+th,y-th:y+th,:] = [0,255,0]
+    rgb[x-th:x+128+th,y+160-th:y+160+th,:] = [0,255,0]
     temp_save = os.path.join ('tmp', 'rgb_'+rgb_file.split(os.sep)[-1])
     cv_io.save(temp_save, rgb)
     return temp_save
@@ -165,12 +188,12 @@ if __name__ == "__main__":
     for i, image_tuple in enumerate(images):
         image, score = image_tuple
         title = image.split(os.sep)[-1].split('.')[0].replace('_', '\_') + ' ::: ' + str(round(score*100,2)) + '\%'
-        scale = 0.18
+        scale = 0.15 if args.dataset == 'nyu' else 0.18 
         cmap_path = os.path.join(args.data_path, 'cmap', image).replace('_', '\string_')
         cmap_img = Graphics(scale, path=cmap_path)
 
         rgb_path = os.path.join(args.data_path, 'rgb', image)
-        rgb_path = ROI_box(rgb_path).replace('_', '\string_')
+        rgb_path = ROI_box(rgb_path, args).replace('_', '\string_')
         rgb_img = Graphics(scale, path=rgb_path)
         
         gt_path = get_gt_temp(image, args)
@@ -184,7 +207,8 @@ if __name__ == "__main__":
         mask_init_path = cmap_path.replace('cmap', 'occ_mask_init')
         mask_init_img = Graphics(scale, path=mask_init_path)
 
-        mask_gt_path = cmap_path.replace('cmap', 'occ_mask_gt')
+        # mask_gt_path = cmap_path.replace('cmap', 'occ_mask_gt')
+        mask_gt_path = get_gt_mask_temp(image, args)
         mask_gt_img = Graphics(scale, path=mask_gt_path)
         
         mask_final_path = cmap_path.replace('cmap', 'occ_mask_final')
