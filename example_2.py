@@ -213,6 +213,7 @@ if __name__ == "__main__":
         items.append('Maximum Depth in GT (ROI): {}'.format(max_depth_ROI))
         stat_ROI = Items(items)
 
+        cmap_path = os.path.join(args.data_path, 'cmap', image).replace('_', '\string_')
         mask_final_path = cmap_path.replace('cmap', 'occ_mask_final')
         mask_final_img = Graphics(scale=0.58, path=mask_final_path)
 
