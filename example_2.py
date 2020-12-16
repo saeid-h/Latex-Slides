@@ -77,7 +77,7 @@ def ROI_box(rgb_file, args, thickness=3):
     cv_io.save(temp_save, rgb)
     return temp_save
 
-def ROI_box_gt(gt_file, thickness=3):
+def ROI_box_gt(gt, gt_path, thickness=3):
     th = thickness
     x = 192; y = 192
     rgb = gt[:,:,np.newaxis]
@@ -86,7 +86,7 @@ def ROI_box_gt(gt_file, thickness=3):
     rgb[x+128-th:x+128+th,y-th:y+160+th,:] = [0,255,0]
     rgb[x-th:x+128+th,y-th:y+th,:] = [0,255,0]
     rgb[x-th:x+128+th,y+160-th:y+160+th,:] = [0,255,0]
-    temp_save = os.path.join ('tmp', 'gt_ROI_'+rgb_file.split(os.sep)[-1])
+    temp_save = os.path.join ('tmp', 'gt_ROI_'+gt_path.split(os.sep)[-1])
     cv_io.save(temp_save, rgb)
     return temp_save
 
@@ -204,7 +204,7 @@ if __name__ == "__main__":
         rgb_img = Graphics(scale, path=rgb_path)
 
         gt_path = get_gt_temp(image, args)
-        gt_path = ROI_box_gt(gt).replace('_', '\string_')
+        gt_path = ROI_box_gt(gt, gt_path).replace('_', '\string_')
         gt_img =  Graphics(scale, path=gt_path) 
 
         mask_gt_path = get_gt_mask_temp(image, args)
