@@ -77,6 +77,19 @@ def ROI_box(rgb_file, args, thickness=3):
     cv_io.save(temp_save, rgb)
     return temp_save
 
+def ROI_box_gt(gt_file, thickness=3):
+    th = thickness
+    x = 192; y = 192
+    rgb = gt[:,:,np.newaxis]
+    rgb = np.concatenate([rgb,rgb,rgb], -1)
+    rgb[x-th:x+th,y-th:y+160+th,:] = [0,255,0]
+    rgb[x+128-th:x+128+th,y-th:y+160+th,:] = [0,255,0]
+    rgb[x-th:x+128+th,y-th:y+th,:] = [0,255,0]
+    rgb[x-th:x+128+th,y+160-th:y+160+th,:] = [0,255,0]
+    temp_save = os.path.join ('tmp', 'gt_ROI_'+rgb_file.split(os.sep)[-1])
+    cv_io.save(temp_save, rgb)
+    return temp_save
+
 def get_files(path, ext='png', filename_only=True):
     file_list = list()
     for root, dirs, files in os.walk(path):
@@ -183,13 +196,15 @@ if __name__ == "__main__":
         image, score = image_tuple
         title = image.split(os.sep)[-1].split('.')[0].replace('_', '\_') + ' ::: ' + str(round(score*100,2)) + '\%'
         scale = 0.15 if args.dataset == 'nyu' else 0.18 
+        gt_path_abs = get_gt_path(image, args.dataset)
+        gt = cv_io.read(gt_path_abs)
 
         rgb_path = os.path.join(args.data_path, 'rgb', image)
         rgb_path = ROI_box(rgb_path, args).replace('_', '\string_')
         rgb_img = Graphics(scale, path=rgb_path)
 
         gt_path = get_gt_temp(image, args)
-        gt_path = ROI_box(gt_path, args).replace('_', '\string_')
+        gt_path = ROI_box_gt(gt).replace('_', '\string_')
         gt_img =  Graphics(scale, path=gt_path) 
 
         mask_gt_path = get_gt_mask_temp(image, args)
@@ -198,8 +213,6 @@ if __name__ == "__main__":
         table_data = [[rgb_img, gt_img, mask_gt_img]]
         table_data += [['RGB', 'GT', 'GT Mask']]
 
-        gt_path_abs = get_gt_path(image, args.dataset)
-        gt = cv_io.read(gt_path_abs)
         min_depth_total = np.min(gt[gt>0])
         max_depth_total = np.max(gt)
         items = ['Miniumum Depth in GT: {}'.format(min_depth_total)]
