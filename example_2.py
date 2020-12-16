@@ -86,7 +86,7 @@ def ROI_box_gt(gt, gt_path, thickness=3):
     rgb[x+128-th:x+128+th,y-th:y+160+th,:] = [0,255,0]
     rgb[x-th:x+128+th,y-th:y+th,:] = [0,255,0]
     rgb[x-th:x+128+th,y+160-th:y+160+th,:] = [0,255,0]
-    temp_save = os.path.join ('tmp', 'gt_ROI_'+gt_path.split(os.sep)[-1])
+    temp_save = os.path.join ('tmp', 'gt_ROI_'+gt_path.split(os.sep)[-1].replace('.dpt', '.png'))
     cv_io.save(temp_save, rgb)
     return temp_save
 
