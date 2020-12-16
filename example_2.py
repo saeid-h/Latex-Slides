@@ -215,16 +215,18 @@ if __name__ == "__main__":
 
         min_depth_total = np.min(gt[gt>0])
         max_depth_total = np.max(gt)
-        items = ['Min Depth in GT: {:4.2f}'.format(min_depth_total)]
-        items.append('Max Depth in GT: {:4.2f}'.format(max_depth_total))
-        stat_total = Items(items)
+        # items = ['Min Depth in GT: {:4.2f}'.format(min_depth_total)]
+        # items.append('Max Depth in GT: {:4.2f}'.format(max_depth_total))
+        # stat_total = Items(items)
+        stat_total = 'Min Depth in GT: {:4.2f}\nMax Depth in GT: {:4.2f}'.format(min_depth_total,max_depth_total)
         
         gt = gt[192:192+128,192:192+160]
         min_depth_ROI = np.min(gt[gt>0])
         max_depth_ROI = np.max(gt)
-        items = ['Min Depth in GT (ROI): {:4.2f}'.format(min_depth_ROI)]
-        items.append('Max Depth in GT (ROI): {:4.2f}'.format(max_depth_ROI))
-        stat_ROI = Items(items)
+        # items = ['Min Depth in GT (ROI): {:4.2f}'.format(min_depth_ROI)]
+        # items.append('Max Depth in GT (ROI): {:4.2f}'.format(max_depth_ROI))
+        # stat_ROI = Items(items)
+        stat_ROI = 'Min Depth in GT (ROI): {:4.2f}\nMax Depth in GT (ROI): {:4.2f}'.format(min_depth_ROI,max_depth_ROI)
 
         cmap_path = os.path.join(args.data_path, 'cmap', image).replace('_', '\string_')
         mask_final_path = cmap_path.replace('cmap', 'occ_mask_final')
