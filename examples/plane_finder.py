@@ -265,9 +265,10 @@ def points_on_image(depth, marked_points, radius=3, shift=1, col=[255, 0, 0], f=
 		return colored_image.astype(np.uint8)
 
 
-def get_points (depth, seg=None, n=10, k=5, f=600, shift=1, th=250):
+def get_points (depth, seg=None, n=10, k=5, f=600, shift=1, th=250, dist='linear'):
 	data = list()
 	H = depth.shape[0]; W = depth.shape[1]
+	if dist == 'log': th = np.log(1+th/1000 )
 	
 	for i in range(n):
 			y = int(np.random.uniform(W*1/4, W*3/4))
@@ -290,7 +291,10 @@ def get_points (depth, seg=None, n=10, k=5, f=600, shift=1, th=250):
 			
 			if len(c_depth) > 0:
 				gap_mask = (c_seg[:-shift, 1] != c_seg[shift:, 1]).astype(np.float32)
-				diff = np.abs(c_depth[:-shift, 1] - c_depth[shift:, 1])
+				if dist == 'log':
+					diff = np.abs(np.log(c_depth[:-shift, 1] / c_depth[shift:, 1]))
+				else:
+					diff = np.abs(c_depth[:-shift, 1] - c_depth[shift:, 1])
 				diff = diff * gap_mask
 				th_len = len(diff[diff>th])
 								
@@ -323,7 +327,10 @@ def get_points (depth, seg=None, n=10, k=5, f=600, shift=1, th=250):
 					
 			if len(r_depth) > 0:
 				gap_mask = (r_seg[:-shift, 1] != r_seg[shift:, 1]).astype(np.float32)
-				diff = np.abs(r_depth[:-shift, 1] - r_depth[shift:, 1])
+				if dist == 'log':
+					diff = np.abs(np.log(r_depth[:-shift, 1] / r_depth[shift:, 1]))
+				else:
+					diff = np.abs(r_depth[:-shift, 1] - r_depth[shift:, 1])
 				diff = diff * gap_mask
 				th_len = len(diff[diff>th])
 							
@@ -565,64 +572,64 @@ def find_lines (data, number_of_lines=1, method='ransac',
 	return line_norms, Ms, selected_data
 
 
-# def find_line(data, plane_th=500, p=0.999, s=2, verbose=False):
+def find_line(data, plane_th=500, p=0.999, s=2, verbose=False):
 	
-# 	if len(data) < 2:
-# 		return None, None, None
+	if len(data) < 2:
+		return None, None, None
 		
-# 	total_number_of_points = data[:,0].size
-# 	sample_count = 0
-# 	iteration = 0
-# 	max_iteration = np.inf
-# 	best_dist = np.inf
-# 	best_inliers = None
-# 	best_sample_count = 0
+	total_number_of_points = data[:,0].size
+	sample_count = 0
+	iteration = 0
+	max_iteration = np.inf
+	best_dist = np.inf
+	best_inliers = None
+	best_sample_count = 0
 
-# 	while max_iteration > iteration or best_inliers is None:
-# 		I = np.random.uniform(0, data.shape[0], s)
-# 		I = [int(i) for i in I]
-# 		hyp_inliers = data[I, :]
+	while max_iteration > iteration or best_inliers is None:
+		I = np.random.uniform(0, data.shape[0], s)
+		I = [int(i) for i in I]
+		hyp_inliers = data[I, :]
 		
-# 		M = hyp_inliers.mean(axis=0)
-# 		_, _, v = np.linalg.svd(hyp_inliers - M)
-# 		N = [0, v[0][2], -v[0][1]]
-# 		if np.linalg.norm(N) != 0:
-# 			N = N / np.linalg.norm(N)
-# 		else:
-# 			N = [0, 0, 1]
+		M = hyp_inliers.mean(axis=0)
+		_, _, v = np.linalg.svd(hyp_inliers - M)
+		N = [0, v[0][2], -v[0][1]]
+		if np.linalg.norm(N) != 0:
+			N = N / np.linalg.norm(N)
+		else:
+			N = [0, 0, 1]
 		
-# 		inliers = list()
-# 		sample_count = 0
+		inliers = list()
+		sample_count = 0
 	
-# 		for d in data:
-# 			if np.linalg.norm(N) != 0:
-# 				if np.abs(np.sum(N*(d-M))) < plane_th:
-# 					inliers.append(d)
-# 					sample_count += 1
-# 			else:
-# 				iteration -= 1
+		for d in data:
+			if np.linalg.norm(N) != 0:
+				if np.abs(np.sum(N*(d-M))) < plane_th:
+					inliers.append(d)
+					sample_count += 1
+			else:
+				iteration -= 1
 		
-# 		if sample_count > best_sample_count:
-# 			best_inliers = inliers
-# 			best_sample_count = sample_count
+		if sample_count > best_sample_count:
+			best_inliers = inliers
+			best_sample_count = sample_count
 		
-# 		e = 1 - best_sample_count / total_number_of_points
-# 		if e == 0:
-# 			e += 10e-5
-# 		max_iteration = np.log(1-p) / np.log(1-(1-e)**s)
-# 		iteration += 1
-# 		if iteration % 1000 == 0 and verbose:
-# 			print (iteration, max_iteration, 1-e)
+		e = 1 - best_sample_count / total_number_of_points
+		if e == 0:
+			e += 10e-5
+		max_iteration = np.log(1-p) / np.log(1-(1-e)**s)
+		iteration += 1
+		if iteration % 1000 == 0 and verbose:
+			print (iteration, max_iteration, 1-e)
 			
-# 	inliers = np.asarray(best_inliers)
-# 	M = inliers.mean(axis=0)
-# 	_, _, v = np.linalg.svd(inliers - M)
+	inliers = np.asarray(best_inliers)
+	M = inliers.mean(axis=0)
+	_, _, v = np.linalg.svd(inliers - M)
 	
-# 	if verbose:
-# 		print ("{:d}, {:5.1f}, {:5.2f}, {}, {}".format(iteration, max_iteration, 1-e, v[0], M))
+	if verbose:
+		print ("{:d}, {:5.1f}, {:5.2f}, {}, {}".format(iteration, max_iteration, 1-e, v[0], M))
 
 	
-# 	return v[0], M, inliers
+	return v[0], M, inliers
 
 
 def add_object(image, depth, new_object, position=None):

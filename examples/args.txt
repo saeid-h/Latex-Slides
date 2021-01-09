@@ -1,0 +1,3 @@
+--data-path /data/datasets/replica_ROI/
+--output-filename test_file
+--dataset replica
