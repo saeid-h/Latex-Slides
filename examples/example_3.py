@@ -107,10 +107,10 @@ def get_planes(gt, image, args, examples=4):
         mask [gt < 0.01] = 255//2
 
         corner_flag = True
-        i = 0
+        j = 0
         best_score = 1.0
         while corner_flag:
-            i += 1
+            j += 1
             h_tmp = np.random.randint(Z.shape[0]-128)
             w_tmp = np.random.randint(Z.shape[1]-160) 
             ROI = Z[h_tmp:h_tmp+128, w_tmp:w_tmp+160]      
@@ -119,7 +119,7 @@ def get_planes(gt, image, args, examples=4):
                 best_score = score
                 h = h_tmp
                 w = w_tmp
-            if score < 0.25 or i > 100:
+            if score < 0.25 or j > 100:
                 corner_flag = False
                 h = h_tmp
                 w = w_tmp
